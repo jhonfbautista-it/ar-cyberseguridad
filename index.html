@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparador de Opciones AR - JFMAX</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .subtitle {
+            font-size: 1.3em;
+            opacity: 0.9;
+        }
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        .option-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            transition: transform 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .option-card:hover {
+            transform: translateY(-10px);
+        }
+        .option-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        .option-card h2 {
+            font-size: 2em;
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+        .option-description {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        .pros-cons {
+            margin: 20px 0;
+        }
+        .pros-cons h3 {
+            font-size: 1.1em;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        .pro-item, .con-item {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+        .pro-item::before {
+            content: "✅";
+            position: absolute;
+            left: 0;
+        }
+        .con-item::before {
+            content: "⚠️";
+            position: absolute;
+            left: 0;
+        }
+        .qr-container {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .qr-code {
+            display: inline-block;
+            padding: 10px;
+            background: white;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+        .btn {
+            display: inline-block;
+            width: 100%;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: bold;
+            text-align: center;
+            margin: 10px 0;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            font-size: 1em;
+        }
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(102,126,234,0.4);
+        }
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+        .comparison-table {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-top: 40px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        .comparison-table h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        th {
+            background: #667eea;
+            color: white;
+            font-weight: bold;
+        }
+        tr:hover {
+            background: #f8f9fa;
+        }
+        .highlight {
+            background: #fff3cd;
+            padding: 20px;
+            border-left: 5px solid #ffc107;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .highlight h3 {
+            color: #f57c00;
+            margin-bottom: 10px;
+        }
+        @media (max-width: 768px) {
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 Comparador AR Cybersecurity</h1>
+            <p class="subtitle">Prueba las 3 opciones y elige la mejor para tu proyecto</p>
+        </div>
+
+        <div class="highlight">
+            <h3>📱 ¿Cómo probar?</h3>
+            <p><strong>Paso 1:</strong> Escanea el QR de cada opción con tu celular</p>
+            <p><strong>Paso 2:</strong> Permite acceso a la cámara</p>
+            <p><strong>Paso 3:</strong> Sigue las instrucciones en pantalla</p>
+            <p><strong>Paso 4:</strong> ¡Decide cuál te gusta más!</p>
+        </div>
+
+        <div class="options-grid">
+            <!-- OPCIÓN 1 -->
+            <div class="option-card">
+                <div class="option-badge">OPCIÓN 1</div>
+                <h2>🎯 Marcadores Predefinidos</h2>
+                <p class="option-description">
+                    Usa marcadores HIRO y KANJI clásicos. Muy preciso y estable.
+                </p>
+
+                <div class="pros-cons">
+                    <h3>Ventajas:</h3>
+                    <div class="pro-item">Muy preciso y estable</div>
+                    <div class="pro-item">Funciona sin configuración extra</div>
+                    <div class="pro-item">Tracking perfecto</div>
+                    <div class="pro-item">Rápido y confiable</div>
+                </div>
+
+                <div class="pros-cons">
+                    <h3>Desventajas:</h3>
+                    <div class="con-item">Necesitas imprimir marcadores específicos</div>
+                    <div class="con-item">No puedes usar tus propios QRs</div>
+                </div>
+
+                <div class="qr-container">
+                    <p><strong>Escanea para probar:</strong></p>
+                    <div class="qr-code" id="qr1"></div>
+                    <p style="font-size: 0.9em; color: #666; margin-top: 10px;">
+                        Después descarga los marcadores HIRO/KANJI
+                    </p>
+                </div>
+
+                <a href="opcion1-marcadores.html" class="btn" target="_blank">🚀 Abrir Directamente</a>
+            </div>
+
+            <!-- OPCIÓN 2 -->
+            <div class="option-card">
+                <div class="option-badge">OPCIÓN 2</div>
+                <h2>🔍 QR Personalizado</h2>
+                <p class="option-description">
+                    Detecta códigos de barras y QRs. Puedes usar tus propios códigos.
+                </p>
+
+                <div class="pros-cons">
+                    <h3>Ventajas:</h3>
+                    <div class="pro-item">Usa tus propios QRs o códigos</div>
+                    <div class="pro-item">Más flexible y personalizable</div>
+                    <div class="pro-item">Múltiples códigos diferentes</div>
+                    <div class="pro-item">Integrable con sistemas existentes</div>
+                </div>
+
+                <div class="pros-cons">
+                    <h3>Desventajas:</h3>
+                    <div class="con-item">Requiere generar marcadores .patt</div>
+                    <div class="con-item">Configuración más técnica</div>
+                    <div class="con-item">Menos preciso que HIRO/KANJI</div>
+                </div>
+
+                <div class="qr-container">
+                    <p><strong>Escanea para probar:</strong></p>
+                    <div class="qr-code" id="qr2"></div>
+                    <p style="font-size: 0.9em; color: #666; margin-top: 10px;">
+                        Funciona con códigos de barras matrix
+                    </p>
+                </div>
+
+                <a href="opcion2-qr-custom.html" class="btn" target="_blank">🚀 Abrir Directamente</a>
+            </div>
+
+            <!-- OPCIÓN 3 -->
+            <div class="option-card">
+                <div class="option-badge">OPCIÓN 3</div>
+                <h2>🎯 Sin Marcadores</h2>
+                <p class="option-description">
+                    AR puro: no necesitas imprimir nada. Toca la pantalla para colocar objetos.
+                </p>
+
+                <div class="pros-cons">
+                    <h3>Ventajas:</h3>
+                    <div class="pro-item">No necesitas imprimir nada</div>
+                    <div class="pro-item">Experiencia más moderna</div>
+                    <div class="pro-item">Coloca objetos donde quieras</div>
+                    <div class="pro-item">Más interactivo</div>
+                </div>
+
+                <div class="pros-cons">
+                    <h3>Desventajas:</h3>
+                    <div class="con-item">Menos preciso en posicionamiento</div>
+                    <div class="con-item">Necesita superficie plana</div>
+                    <div class="con-item">Puede "flotar" en el aire</div>
+                </div>
+
+                <div class="qr-container">
+                    <p><strong>Escanea para probar:</strong></p>
+                    <div class="qr-code" id="qr3"></div>
+                    <p style="font-size: 0.9em; color: #666; margin-top: 10px;">
+                        Funciona inmediatamente, sin marcadores
+                    </p>
+                </div>
+
+                <a href="opcion3-markerless.html" class="btn" target="_blank">🚀 Abrir Directamente</a>
+            </div>
+        </div>
+
+        <!-- Tabla Comparativa -->
+        <div class="comparison-table">
+            <h2>📊 Comparación Detallada</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Característica</th>
+                        <th>Opción 1: Marcadores</th>
+                        <th>Opción 2: QR Custom</th>
+                        <th>Opción 3: Sin Marcadores</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Necesita imprimir</strong></td>
+                        <td>✅ Sí (HIRO/KANJI)</td>
+                        <td>✅ Sí (QR propios)</td>
+                        <td>❌ No</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Precisión</strong></td>
+                        <td>⭐⭐⭐⭐⭐ Excelente</td>
+                        <td>⭐⭐⭐⭐ Muy buena</td>
+                        <td>⭐⭐⭐ Buena</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Facilidad de uso</strong></td>
+                        <td>⭐⭐⭐⭐⭐ Muy fácil</td>
+                        <td>⭐⭐⭐ Media</td>
+                        <td>⭐⭐⭐⭐⭐ Muy fácil</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Personalización</strong></td>
+                        <td>⭐⭐ Limitada</td>
+                        <td>⭐⭐⭐⭐⭐ Total</td>
+                        <td>⭐⭐⭐⭐ Alta</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Estabilidad</strong></td>
+                        <td>⭐⭐⭐⭐⭐ Muy estable</td>
+                        <td>⭐⭐⭐⭐ Estable</td>
+                        <td>⭐⭐⭐ Variable</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Complejidad técnica</strong></td>
+                        <td>⭐ Baja</td>
+                        <td>⭐⭐⭐⭐ Alta</td>
+                        <td>⭐⭐ Media</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Mejor para...</strong></td>
+                        <td>Capacitaciones formales, demos</td>
+                        <td>Campañas personalizadas, eventos</td>
+                        <td>Experiencias casuales, ferias</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="highlight" style="margin-top: 40px;">
+            <h3>💡 Mi Recomendación Personal:</h3>
+            <p style="line-height: 1.8;">
+                <strong>Para empezar rápido:</strong> Usa <strong>Opción 1 (Marcadores)</strong> - Es la más confiable y fácil.<br><br>
+                <strong>Para campañas profesionales:</strong> Usa <strong>Opción 2 (QR Custom)</strong> - Puedes poner tu logo/marca en los QRs.<br><br>
+                <strong>Para demos casuales:</strong> Usa <strong>Opción 3 (Sin Marcadores)</strong> - Sin necesidad de imprimir nada.
+            </p>
+        </div>
+
+        <div style="text-align: center; margin-top: 40px; color: white;">
+            <p style="font-size: 1.2em; margin-bottom: 10px;">
+                <strong>Desarrollado por JFMAX</strong>
+            </p>
+            <p style="opacity: 0.8;">
+                John Freddy Bautista Díaz - APC Colombia<br>
+                © 2026 - Todos los derechos reservados
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Obtener la URL base actual
+        const baseURL = window.location.href.replace('index.html', '');
+        
+        // Generar QR codes
+        new QRCode(document.getElementById("qr1"), {
+            text: baseURL + "opcion1-marcadores.html",
+            width: 200,
+            height: 200,
+            colorDark : "#667eea",
+            colorLight : "#ffffff",
+            correctLevel : QRCode.CorrectLevel.H
+        });
+
+        new QRCode(document.getElementById("qr2"), {
+            text: baseURL + "opcion2-qr-custom.html",
+            width: 200,
+            height: 200,
+            colorDark : "#ff5722",
+            colorLight : "#ffffff",
+            correctLevel : QRCode.CorrectLevel.H
+        });
+
+        new QRCode(document.getElementById("qr3"), {
+            text: baseURL + "opcion3-markerless.html",
+            width: 200,
+            height: 200,
+            colorDark : "#9C27B0",
+            colorLight : "#ffffff",
+            correctLevel : QRCode.CorrectLevel.H
+        });
+    </script>
+</body>
+</html>

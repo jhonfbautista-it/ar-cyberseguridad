@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OPCIÓN 1 - Marcadores Personalizados</title>
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <style>
+        body { margin: 0; overflow: hidden; font-family: Arial, sans-serif; }
+        .info-overlay {
+            position: fixed; top: 0; left: 0; right: 0;
+            background: rgba(102,126,234,0.95);
+            color: white; padding: 20px;
+            text-align: center; z-index: 1000;
+        }
+        .info-overlay h2 { margin: 0 0 10px 0; }
+        .instructions {
+            position: fixed; bottom: 20px; left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8); color: white;
+            padding: 15px 30px; border-radius: 25px;
+            z-index: 999; text-align: center;
+            max-width: 90%;
+        }
+        .marker-download {
+            position: fixed; top: 80px; right: 20px;
+            background: rgba(255,255,255,0.95);
+            padding: 15px; border-radius: 15px;
+            z-index: 999; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .marker-download h3 { 
+            margin: 0 0 10px 0; color: #667eea; font-size: 1em;
+        }
+        .download-btn {
+            display: block;
+            background: #667eea; color: white;
+            padding: 10px 20px; margin: 5px 0;
+            border-radius: 8px; text-decoration: none;
+            font-size: 0.9em; text-align: center;
+        }
+        .status {
+            position: fixed; top: 150px; left: 20px;
+            background: rgba(0,0,0,0.8); color: white;
+            padding: 10px 20px; border-radius: 10px;
+            z-index: 999; font-size: 0.9em;
+        }
+        .status.found { background: rgba(76,175,80,0.9); }
+    </style>
+</head>
+<body>
+    <div class="info-overlay">
+        <h2>📱 OPCIÓN 1: Marcadores Personalizados</h2>
+        <p style="margin: 5px 0; font-size: 0.9em;">Usa marcadores HIRO y KANJI predefinidos</p>
+        <p style="margin: 5px 0; font-size: 0.8em;">⚡ Ventaja: Muy preciso | ⚠️ Necesitas imprimir los marcadores</p>
+    </div>
+
+    <div class="marker-download">
+        <h3>📥 Descarga Marcadores:</h3>
+        <a href="https://raw.githubusercontent.com/AR-js-org/AR.js/master/data/images/hiro.png" 
+           download class="download-btn" target="_blank">⬇️ Marcador HIRO</a>
+        <a href="https://raw.githubusercontent.com/AR-js-org/AR.js/master/data/images/kanji.png" 
+           download class="download-btn" target="_blank">⬇️ Marcador KANJI</a>
+    </div>
+
+    <div class="status" id="status">🔍 Buscando marcador...</div>
+
+    <div class="instructions">
+        📸 Descarga, imprime y apunta la cámara a los marcadores
+    </div>
+
+    <a-scene
+        embedded
+        arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
+        vr-mode-ui="enabled: false"
+        renderer="logarithmicDepthBuffer: true;">
+        
+        <!-- MARCADOR 1: HIRO - Ninja Hacker -->
+        <a-marker preset="hiro" id="marker-hiro">
+            <a-entity position="0 0 0">
+                <!-- Ninja simplificado -->
+                <a-box position="0 0.5 0" scale="0.3 0.6 0.2" color="#1a1a1a"
+                       animation="property: rotation; to: 0 360 0; loop: true; dur: 6000; easing: linear">
+                </a-box>
+                <a-sphere position="0 1 0" radius="0.2" color="#2a2a2a"></a-sphere>
+                <a-sphere position="-0.08 1.05 0.15" radius="0.03" color="#00ff00"
+                          animation="property: components.material.material.color; from: #00ff00; to: #00ffff; loop: true; dur: 1000">
+                </a-sphere>
+                <a-sphere position="0.08 1.05 0.15" radius="0.03" color="#00ff00"
+                          animation="property: components.material.material.color; from: #00ff00; to: #00ffff; loop: true; dur: 1000">
+                </a-sphere>
+            </a-entity>
+
+            <!-- Mensaje Ninja -->
+            <a-entity position="0 1.8 0" 
+                      animation="property: position; from: 0 1.8 0; to: 0 2 0; loop: true; dur: 2000; dir: alternate">
+                <a-plane width="2" height="1" color="#00d4ff" opacity="0.95"></a-plane>
+                <a-text value="¡ALERTA!" position="0 0.3 0.01" align="center" width="1.8" color="#ffffff"></a-text>
+                <a-text value="Ninja de Ciberseguridad" position="0 0.05 0.01" align="center" width="1.6" color="#ffffff"></a-text>
+                <a-text value="Marcador HIRO detectado" position="0 -0.2 0.01" align="center" width="1.5" color="#ffffff"></a-text>
+            </a-entity>
+
+            <!-- Plataforma -->
+            <a-cylinder position="0 0 0" radius="0.5" height="0.05" color="#00d4ff"></a-cylinder>
+        </a-marker>
+
+        <!-- MARCADOR 2: KANJI - Superheroína -->
+        <a-marker preset="kanji" id="marker-kanji">
+            <a-entity position="0 0 0">
+                <!-- Superheroína simplificada -->
+                <a-box position="0 0.8 0" scale="0.35 0.5 0.25" color="#ff0033"
+                       animation="property: scale; from: 0.35 0.5 0.25; to: 0.37 0.52 0.27; loop: true; dur: 2000; dir: alternate">
+                </a-box>
+                <a-box position="0 0.3 0" scale="0.35 0.5 0.25" color="#0033ff"></a-box>
+                <a-sphere position="0 1.25 0" radius="0.18" color="#ffd0b3"></a-sphere>
+                <a-cone position="0 1.45 0" radius-bottom="0.2" radius-top="0.05" height="0.3" color="#663300"></a-cone>
+                
+                <!-- Capa -->
+                <a-plane position="0 0.7 -0.15" width="0.5" height="0.8" color="#ffcc00"
+                         animation="property: rotation; from: 0 -5 0; to: 0 5 0; loop: true; dur: 2000; dir: alternate">
+                </a-plane>
+            </a-entity>
+
+            <!-- Mensaje Heroína -->
+            <a-entity position="0.8 1.5 0" rotation="0 -20 0"
+                      animation="property: position; from: 0.8 1.5 0; to: 0.8 1.7 0; loop: true; dur: 2500; dir: alternate">
+                <a-plane width="1.5" height="0.8" color="#ff1493" opacity="0.95"></a-plane>
+                <a-text value="¡Super Alerta! 💖" position="0 0.2 0.01" align="center" width="1.3" color="#ffffff"></a-text>
+                <a-text value="Protege tu info" position="0 -0.1 0.01" align="center" width="1.2" color="#ffffff"></a-text>
+            </a-entity>
+
+            <!-- Plataforma -->
+            <a-cylinder position="0 0 0" radius="0.5" height="0.05" color="#ff1493"></a-cylinder>
+        </a-marker>
+
+        <a-entity camera></a-entity>
+    </a-scene>
+
+    <script>
+        const status = document.getElementById('status');
+        const hiro = document.getElementById('marker-hiro');
+        const kanji = document.getElementById('marker-kanji');
+
+        if(hiro) {
+            hiro.addEventListener('markerFound', () => {
+                status.textContent = '✅ Ninja Hacker detectado!';
+                status.classList.add('found');
+            });
+            hiro.addEventListener('markerLost', () => {
+                status.textContent = '🔍 Buscando marcador...';
+                status.classList.remove('found');
+            });
+        }
+
+        if(kanji) {
+            kanji.addEventListener('markerFound', () => {
+                status.textContent = '✅ Superheroína detectada!';
+                status.classList.add('found');
+            });
+            kanji.addEventListener('markerLost', () => {
+                status.textContent = '🔍 Buscando marcador...';
+                status.classList.remove('found');
+            });
+        }
+    </script>
+</body>
+</html>
