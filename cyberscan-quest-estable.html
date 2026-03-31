@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberScan Quest - Versión Estable</title>
+    
+    <!-- CDN Alternativo de Tesseract -->
+    <script src="https://unpkg.com/tesseract.js@v4.0.2/dist/tesseract.min.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&family=Fredoka:wght@400;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Fredoka', 'Comic Sans MS', cursive;
+            overflow: hidden;
+            background: #000;
+        }
+        
+        #video-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+        #camera {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        #canvas {
+            display: none;
+        }
+        
+        /* Header */
+        .game-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, #FF6B9D 0%, #C06C84 100%);
+            padding: 15px 20px;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .game-title {
+            font-family: 'Comic Neue', cursive;
+            font-size: 1.4em;
+            color: #FFF;
+            text-shadow: 3px 3px 0 rgba(0,0,0,0.3);
+            font-weight: 700;
+        }
+        
+        .stats-container {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .stat-box {
+            background: rgba(255,255,255,0.95);
+            padding: 8px 15px;
+            border-radius: 20px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            font-weight: 700;
+        }
+        
+        .stat-label {
+            font-size: 0.7em;
+            color: #666;
+        }
+        
+        .stat-value {
+            font-size: 1.2em;
+            color: #FF6B9D;
+        }
+        
+        /* Scan Zone */
+        .scan-zone {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            max-width: 400px;
+            height: 280px;
+            border: 4px dashed #FFD93D;
+            border-radius: 25px;
+            z-index: 900;
+            pointer-events: none;
+            animation: scan-pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes scan-pulse {
+            0%, 100% { 
+                border-color: #FFD93D;
+                box-shadow: 0 0 20px rgba(255,217,61,0.5);
+            }
+            50% { 
+                border-color: #6BCF7F;
+                box-shadow: 0 0 30px rgba(107,207,127,0.7);
+            }
+        }
+        
+        .scan-corners {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border: 5px solid #FF6B9D;
+        }
+        
+        .corner-tl { top: -5px; left: -5px; border-right: none; border-bottom: none; border-radius: 20px 0 0 0; }
+        .corner-tr { top: -5px; right: -5px; border-left: none; border-bottom: none; border-radius: 0 20px 0 0; }
+        .corner-bl { bottom: -5px; left: -5px; border-right: none; border-top: none; border-radius: 0 0 0 20px; }
+        .corner-br { bottom: -5px; right: -5px; border-left: none; border-top: none; border-radius: 0 0 20px 0; }
+        
+        /* Controls */
+        .controls {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 1001;
+            width: 90%;
+            max-width: 400px;
+        }
+        
+        .btn-scan {
+            background: linear-gradient(135deg, #6BCF7F 0%, #4ECDC4 100%);
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            border-radius: 50px;
+            font-size: 1.5em;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(107,207,127,0.5);
+            font-family: 'Fredoka', cursive;
+            transition: all 0.3s;
+        }
+        
+        .btn-scan:active {
+            transform: scale(0.95);
+        }
+        
+        .btn-scan:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        /* Quick Select */
+        .quick-select {
+            background: rgba(255,255,255,0.95);
+            padding: 15px;
+            border-radius: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .quick-select h3 {
+            color: #FF6B9D;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .word-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+        
+        .word-btn {
+            background: linear-gradient(135deg, #f0f0f0, #e0e0e0);
+            border: 2px solid #FF6B9D;
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Fredoka', cursive;
+        }
+        
+        .word-btn:active {
+            background: linear-gradient(135deg, #FF6B9D, #C06C84);
+            color: white;
+        }
+        
+        .word-btn.found {
+            background: linear-gradient(135deg, #6BCF7F, #4ECDC4);
+            color: white;
+            border-color: #4ECDC4;
+        }
+        
+        /* Status */
+        .status-bar {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 20px;
+            z-index: 1000;
+            font-weight: 700;
+            font-size: 0.95em;
+            text-align: center;
+            max-width: 90%;
+        }
+        
+        .status-bar.scanning {
+            background: linear-gradient(135deg, #FFD93D 0%, #FFA07A 100%);
+            color: #333;
+        }
+        
+        /* AR Overlay */
+        .ar-card-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s;
+        }
+        
+        .ar-card-overlay.show {
+            display: flex;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .ar-card {
+            background: linear-gradient(145deg, #ffffff 0%, #f0f0f0 100%);
+            border-radius: 30px;
+            padding: 30px;
+            max-width: 90%;
+            width: 450px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+            animation: cardPop 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            border: 6px solid;
+        }
+        
+        @keyframes cardPop {
+            0% {
+                transform: scale(0.3) rotate(-10deg);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+            }
+        }
+        
+        .mascot-emoji {
+            font-size: 6em;
+            animation: mascotBounce 1s ease-in-out infinite;
+            display: inline-block;
+            text-align: center;
+        }
+        
+        @keyframes mascotBounce {
+            0%, 100% { transform: translateY(0) rotate(-5deg); }
+            50% { transform: translateY(-15px) rotate(5deg); }
+        }
+        
+        .word-title {
+            font-family: 'Comic Neue', cursive;
+            font-size: 2.5em;
+            font-weight: 700;
+            text-align: center;
+            margin: 15px 0;
+            text-transform: uppercase;
+            text-shadow: 3px 3px 0 rgba(0,0,0,0.1);
+        }
+        
+        .definition-text {
+            font-size: 1.15em;
+            line-height: 1.7;
+            color: #333;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .points-badge {
+            background: linear-gradient(135deg, #FFD93D 0%, #FFA07A 100%);
+            color: white;
+            padding: 10px 25px;
+            border-radius: 20px;
+            font-size: 1.3em;
+            font-weight: 700;
+            text-align: center;
+            margin-top: 15px;
+            box-shadow: 0 4px 15px rgba(255,160,122,0.4);
+        }
+        
+        .timer-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(0,0,0,0.1);
+            border-radius: 3px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+        
+        .timer-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #6BCF7F, #4ECDC4);
+            animation: timerShrink 5s linear;
+        }
+        
+        @keyframes timerShrink {
+            from { width: 100%; }
+            to { width: 0%; }
+        }
+        
+        /* Victory Modal */
+        .victory-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #FF6B9D 0%, #C06C84 100%);
+            z-index: 3000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 20px;
+        }
+        
+        .victory-modal.show {
+            display: flex;
+        }
+        
+        .victory-title {
+            font-family: 'Comic Neue', cursive;
+            font-size: 4em;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 20px;
+            text-shadow: 4px 4px 0 rgba(0,0,0,0.3);
+            animation: victoryPulse 1s infinite;
+        }
+        
+        @keyframes victoryPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .victory-stars {
+            font-size: 3em;
+            margin: 20px 0;
+        }
+        
+        .final-stats {
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            padding: 25px;
+            border-radius: 20px;
+            margin: 20px 0;
+            color: white;
+        }
+        
+        .final-stat {
+            font-size: 1.5em;
+            margin: 10px 0;
+        }
+        
+        .restart-btn {
+            background: white;
+            color: #FF6B9D;
+            border: none;
+            padding: 20px 50px;
+            border-radius: 30px;
+            font-size: 1.3em;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 20px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+            font-family: 'Fredoka', cursive;
+        }
+        
+        /* Music Toggle */
+        .music-toggle {
+            position: fixed;
+            top: 90px;
+            right: 20px;
+            background: rgba(255,255,255,0.9);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            z-index: 1001;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3em;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="game-header">
+        <div class="game-title">🎮 CyberScan Quest!</div>
+        <div class="stats-container">
+            <div class="stat-box">
+                <div class="stat-label">Palabras</div>
+                <div class="stat-value" id="word-count">0/15</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Puntos</div>
+                <div class="stat-value" id="points">0</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="video-container">
+        <video id="camera" autoplay playsinline></video>
+        <canvas id="canvas"></canvas>
+    </div>
+
+    <div class="scan-zone">
+        <div class="scan-corners corner-tl"></div>
+        <div class="scan-corners corner-tr"></div>
+        <div class="scan-corners corner-bl"></div>
+        <div class="scan-corners corner-br"></div>
+    </div>
+
+    <div class="status-bar" id="status">🚀 Iniciando...</div>
+
+    <div class="music-toggle" id="music-toggle" onclick="toggleMusic()">🔊</div>
+
+    <div class="controls">
+        <div class="quick-select">
+            <h3>⚡ Selección Rápida:</h3>
+            <div class="word-grid" id="word-grid"></div>
+        </div>
+        
+        <button class="btn-scan" id="scan-btn" onclick="scanNow()">
+            📸 ESCANEAR PALABRA
+        </button>
+    </div>
+
+    <div class="ar-card-overlay" id="ar-overlay">
+        <div class="ar-card" id="ar-card">
+            <div style="text-align: center;">
+                <div class="mascot-emoji" id="mascot">🤖</div>
+            </div>
+            <div class="word-title" id="word-title"></div>
+            <div class="definition-text" id="definition-text"></div>
+            <div class="points-badge">+10 PUNTOS! 🌟</div>
+            <div class="timer-bar">
+                <div class="timer-fill" id="timer-fill"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="victory-modal" id="victory-modal">
+        <div class="victory-title">🎉 ¡VICTORIA! 🎉</div>
+        <div class="victory-stars">⭐⭐⭐</div>
+        <div class="final-stats">
+            <div class="final-stat">📚 15/15 Palabras Encontradas</div>
+            <div class="final-stat" id="final-points">🏆 150 Puntos Totales</div>
+        </div>
+        <button class="restart-btn" onclick="restartGame()">🔄 Jugar de Nuevo</button>
+    </div>
+
+    <audio id="bg-music" loop>
+        <source src="https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        const CYBER_DICTIONARY = {
+            'PHISHING': { definition: 'Técnica de fraude donde atacantes se hacen pasar por entidades legítimas para robar contraseñas y datos personales.', mascot: '🎣', color: '#E91E63' },
+            'MALWARE': { definition: 'Software malicioso diseñado para infiltrarse y dañar sistemas sin autorización.', mascot: '🦠', color: '#F44336' },
+            'RANSOMWARE': { definition: 'Malware que cifra tus archivos y exige un rescate para recuperarlos.', mascot: '🔒', color: '#FF5722' },
+            'FIREWALL': { definition: 'Barrera de seguridad que filtra el tráfico de red bloqueando conexiones peligrosas.', mascot: '🛡️', color: '#4CAF50' },
+            'HACKER': { definition: 'Experto en sistemas informáticos. Los "white hat" son éticos, los "black hat" atacan.', mascot: '👨‍💻', color: '#9C27B0' },
+            'PASSWORD': { definition: 'Tu contraseña debe tener 12+ caracteres mezclando letras, números y símbolos.', mascot: '🔑', color: '#FF9800' },
+            'CONTRASEÑA': { definition: 'Debe tener 12+ caracteres mezclando letras, números y símbolos.', mascot: '🔑', color: '#FF9800' },
+            'VIRUS': { definition: 'Programa que se replica e infecta archivos para robar datos o dañar sistemas.', mascot: '🦠', color: '#E91E63' },
+            'CIBERSEGURIDAD': { definition: 'Conjunto de prácticas para proteger sistemas, redes y datos de ataques digitales.', mascot: '🔐', color: '#2196F3' },
+            'SPAM': { definition: 'Correo basura enviado masivamente con fines publicitarios o fraudulentos.', mascot: '📧', color: '#FF9800' },
+            'ANTIVIRUS': { definition: 'Software que detecta, previene y elimina malware en tiempo real.', mascot: '💊', color: '#4CAF50' },
+            'VPN': { definition: 'Red Privada Virtual que cifra tu conexión ocultando tu IP.', mascot: '🔐', color: '#3F51B5' },
+            'BACKUP': { definition: 'Copia de seguridad de datos importantes. Realiza backups regularmente.', mascot: '💾', color: '#00BCD4' },
+            'CIFRADO': { definition: 'Proceso de codificar información para que solo autorizados puedan leerla.', mascot: '🔐', color: '#9C27B0' },
+            'TECLADO': { definition: 'Dispositivo de entrada con teclas para introducir texto y comandos.', mascot: '⌨️', color: '#607D8B' }
+        };
+
+        let worker = null;
+        let video = null;
+        let canvas = null;
+        let ctx = null;
+        let foundWords = new Set();
+        let totalPoints = 0;
+        let currentWord = null;
+        let musicPlaying = false;
+        const bgMusic = document.getElementById('bg-music');
+        const totalWords = Object.keys(CYBER_DICTIONARY).length;
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            video = document.getElementById('camera');
+            canvas = document.getElementById('canvas');
+            ctx = canvas.getContext('2d');
+
+            updateStatus('📷 Iniciando cámara...');
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment', width: {ideal: 1920}, height: {ideal: 1080} }
+                });
+                video.srcObject = stream;
+                updateStatus('✅ Cámara lista!');
+                
+                setTimeout(() => {
+                    bgMusic.play().catch(e => console.log('Música requiere interacción'));
+                    musicPlaying = true;
+                }, 500);
+                
+                initWordGrid();
+                initOCR();
+            } catch (err) {
+                updateStatus('❌ No se puede acceder a la cámara');
+            }
+        });
+
+        async function initOCR() {
+            try {
+                updateStatus('⏳ Cargando detector OCR...');
+                worker = await Tesseract.createWorker('spa');
+                await worker.setParameters({
+                    tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZÁÉÍÓÚÑ ',
+                });
+                updateStatus('✅ Listo! Apunta y escanea 🔍');
+            } catch (err) {
+                updateStatus('⚠️ OCR no disponible - Usa selección manual');
+                console.error('Error OCR:', err);
+            }
+        }
+
+        function initWordGrid() {
+            const grid = document.getElementById('word-grid');
+            Object.keys(CYBER_DICTIONARY).forEach(word => {
+                const btn = document.createElement('button');
+                btn.className = 'word-btn';
+                btn.textContent = word;
+                btn.onclick = () => selectWord(word);
+                btn.id = `btn-${word}`;
+                grid.appendChild(btn);
+            });
+        }
+
+        function selectWord(word) {
+            if (!foundWords.has(word)) {
+                wordFound(word);
+            }
+        }
+
+        async function scanNow() {
+            const btn = document.getElementById('scan-btn');
+            if (!worker || !video.videoWidth) {
+                updateStatus('⚠️ Usa selección manual');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = '⏳ ESCANEANDO...';
+            updateStatus('🔍 Analizando imagen...', true);
+
+            try {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                ctx.drawImage(video, 0, 0);
+
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                enhanceForOCR(imageData);
+                ctx.putImageData(imageData, 0, 0);
+
+                const { data: { text } } = await worker.recognize(canvas);
+                const cleanText = text.toUpperCase().replace(/[^A-ZÁÉÍÓÚÑ\s]/g, '').replace(/\s+/g, ' ').trim();
+
+                let foundNew = false;
+                for (const word in CYBER_DICTIONARY) {
+                    if (cleanText.includes(word) && !foundWords.has(word)) {
+                        wordFound(word);
+                        foundNew = true;
+                        break;
+                    }
+                }
+
+                if (!foundNew) {
+                    updateStatus('⚠️ No se detectó palabra - Usa selección manual');
+                }
+            } catch (err) {
+                updateStatus('❌ Error al escanear');
+            }
+
+            btn.disabled = false;
+            btn.textContent = '📸 ESCANEAR PALABRA';
+        }
+
+        function enhanceForOCR(imageData) {
+            const data = imageData.data;
+            for (let i = 0; i < data.length; i += 4) {
+                const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+                const final = avg > 140 ? 255 : 0;
+                data[i] = data[i + 1] = data[i + 2] = final;
+            }
+        }
+
+        function wordFound(word) {
+            if (foundWords.has(word)) return;
+            
+            currentWord = word;
+            foundWords.add(word);
+            totalPoints += 10;
+            
+            updateStats();
+            showDefinition(word);
+            
+            const btn = document.getElementById(`btn-${word}`);
+            if (btn) btn.classList.add('found');
+            
+            if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+            
+            if (foundWords.size >= totalWords) {
+                setTimeout(showVictory, 5500);
+            }
+        }
+
+        function showDefinition(word) {
+            const data = CYBER_DICTIONARY[word];
+            document.getElementById('mascot').textContent = data.mascot;
+            document.getElementById('word-title').textContent = word;
+            document.getElementById('word-title').style.color = data.color;
+            document.getElementById('ar-card').style.borderColor = data.color;
+            document.getElementById('definition-text').textContent = data.definition;
+            document.getElementById('ar-overlay').classList.add('show');
+            
+            const timerFill = document.getElementById('timer-fill');
+            timerFill.style.animation = 'none';
+            setTimeout(() => {
+                timerFill.style.animation = 'timerShrink 5s linear';
+            }, 10);
+            
+            setTimeout(hideDefinition, 5000);
+        }
+
+        function hideDefinition() {
+            document.getElementById('ar-overlay').classList.remove('show');
+            currentWord = null;
+            updateStatus('🔍 ¡Busca la siguiente palabra!');
+        }
+
+        function updateStats() {
+            document.getElementById('word-count').textContent = `${foundWords.size}/${totalWords}`;
+            document.getElementById('points').textContent = totalPoints;
+        }
+
+        function updateStatus(text, scanning = false) {
+            const status = document.getElementById('status');
+            status.textContent = text;
+            status.className = scanning ? 'status-bar scanning' : 'status-bar';
+        }
+
+        function showVictory() {
+            document.getElementById('final-points').textContent = `🏆 ${totalPoints} Puntos Totales`;
+            document.getElementById('victory-modal').classList.add('show');
+        }
+
+        function restartGame() {
+            foundWords.clear();
+            totalPoints = 0;
+            updateStats();
+            document.querySelectorAll('.word-btn').forEach(btn => btn.classList.remove('found'));
+            document.getElementById('victory-modal').classList.remove('show');
+            updateStatus('✅ ¡Nueva partida! 🔍');
+        }
+
+        function toggleMusic() {
+            const toggle = document.getElementById('music-toggle');
+            if (musicPlaying) {
+                bgMusic.pause();
+                toggle.textContent = '🔇';
+                musicPlaying = false;
+            } else {
+                bgMusic.play();
+                toggle.textContent = '🔊';
+                musicPlaying = true;
+            }
+        }
+
+        window.addEventListener('beforeunload', () => {
+            if (worker) worker.terminate();
+        });
+    </script>
+</body>
+</html>
