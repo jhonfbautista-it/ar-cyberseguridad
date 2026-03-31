@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AR QR Matrix - JFMAX</title>
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <style>
+        body { margin: 0; overflow: hidden; font-family: Arial, sans-serif; }
+        
+        .info-bar {
+            position: fixed; top: 0; left: 0; right: 0;
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white; padding: 15px;
+            text-align: center; z-index: 1000;
+            font-size: 0.95em;
+        }
+        
+        .status {
+            position: fixed; top: 60px; left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.85); color: white;
+            padding: 15px 30px; border-radius: 15px;
+            z-index: 999; font-size: 1em;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        
+        .status.found {
+            background: rgba(76,175,80,0.95);
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.05); }
+        }
+        
+        .instructions {
+            position: fixed; bottom: 20px; left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.85); color: white;
+            padding: 20px 30px; border-radius: 25px;
+            z-index: 999; text-align: center;
+            max-width: 90%; line-height: 1.6;
+        }
+        
+        .marker-grid {
+            position: fixed; right: 20px; top: 120px;
+            background: rgba(255,255,255,0.95);
+            padding: 15px; border-radius: 15px;
+            z-index: 999; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            max-width: 180px;
+        }
+        
+        .marker-grid h3 {
+            margin: 0 0 10px 0; color: #4CAF50;
+            font-size: 0.9em; text-align: center;
+        }
+        
+        .marker-mini {
+            width: 100%;
+            height: auto;
+            margin: 8px 0;
+            border: 2px solid #4CAF50;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .marker-mini:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 10px rgba(76,175,80,0.4);
+        }
+        
+        .btn-show {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            width: 100%;
+            margin-top: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.85em;
+        }
+        
+        .btn-show:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body>
+    <div class="info-bar">
+        🎯 AR con Códigos Matrix - Más Fácil de Detectar
+    </div>
+
+    <div class="status" id="status">
+        🔍 Apunta a uno de los códigos →
+    </div>
+
+    <div class="marker-grid">
+        <h3>📱 Usa estos códigos:</h3>
+        <svg class="marker-mini" viewBox="0 0 200 200" onclick="showMarker(0)">
+            <!-- Matrix Code 0 -->
+            <rect width="200" height="200" fill="white"/>
+            <rect x="20" y="20" width="160" height="160" fill="black"/>
+            <rect x="30" y="30" width="140" height="140" fill="white"/>
+            <rect x="50" y="50" width="30" height="30" fill="black"/>
+            <rect x="120" y="50" width="30" height="30" fill="black"/>
+            <rect x="50" y="120" width="30" height="30" fill="black"/>
+            <rect x="120" y="120" width="30" height="30" fill="black"/>
+        </svg>
+        <p style="font-size: 0.8em; color: #666; text-align: center; margin: 5px 0;">Código 0 - Ninja</p>
+        
+        <svg class="marker-mini" viewBox="0 0 200 200" onclick="showMarker(1)">
+            <!-- Matrix Code 1 -->
+            <rect width="200" height="200" fill="white"/>
+            <rect x="20" y="20" width="160" height="160" fill="black"/>
+            <rect x="30" y="30" width="140" height="140" fill="white"/>
+            <rect x="70" y="50" width="60" height="20" fill="black"/>
+            <rect x="50" y="85" width="100" height="30" fill="black"/>
+            <rect x="70" y="130" width="60" height="20" fill="black"/>
+        </svg>
+        <p style="font-size: 0.8em; color: #666; text-align: center; margin: 5px 0;">Código 1 - Hero</p>
+        
+        <button class="btn-show" onclick="showAllMarkers()">
+            🖼️ Ver Todos Grande
+        </button>
+    </div>
+
+    <div class="instructions">
+        👆 Toca un código arriba para verlo grande<br>
+        o apunta la cámara directamente
+    </div>
+
+    <a-scene
+        embedded
+        arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
+        vr-mode-ui="enabled: false"
+        renderer="logarithmicDepthBuffer: true;">
+        
+        <!-- BARCODE 0 - NINJA HACKER -->
+        <a-marker type="barcode" value="0" id="barcode-0">
+            
+            <a-entity position="0 0 0">
+                <!-- Ninja simplificado -->
+                <a-box position="0 0.5 0" scale="0.4 0.7 0.25" color="#1a1a1a"
+                       animation="property: rotation; to: 0 360 0; loop: true; dur: 5000; easing: linear">
+                </a-box>
+                
+                <a-sphere position="0 1.1 0" radius="0.22" color="#2a2a2a"></a-sphere>
+                
+                <!-- Ojos verdes brillantes -->
+                <a-sphere position="-0.09 1.15 0.18" radius="0.04" color="#00ff00"
+                          animation="property: components.material.material.color; from: #00ff00; to: #00ffff; loop: true; dur: 800">
+                </a-sphere>
+                <a-sphere position="0.09 1.15 0.18" radius="0.04" color="#00ff00"
+                          animation="property: components.material.material.color; from: #00ff00; to: #00ffff; loop: true; dur: 800">
+                </a-sphere>
+                
+                <!-- Katanas -->
+                <a-cylinder position="-0.25 0.9 -0.12" rotation="40 0 50" radius="0.025" height="0.7" color="#c0c0c0"></a-cylinder>
+                <a-cylinder position="0.25 0.9 -0.12" rotation="40 0 -50" radius="0.025" height="0.7" color="#c0c0c0"></a-cylinder>
+            </a-entity>
+
+            <!-- Mensaje grande y claro -->
+            <a-entity position="0 2.2 0" 
+                      animation="property: position; from: 0 2.2 0; to: 0 2.4 0; loop: true; dur: 2000; dir: alternate; easing: easeInOutSine">
+                
+                <a-plane width="3" height="1.5" color="#00d4ff" opacity="0.95" material="side: double"></a-plane>
+                
+                <a-text value="🚨 ALERTA 🚨" 
+                        position="0 0.55 0.01" 
+                        align="center" 
+                        width="2.8"
+                        color="#ffffff"
+                        font="roboto"
+                        wrap-count="20">
+                </a-text>
+                
+                <a-text value="Eres la primera" 
+                        position="0 0.25 0.01" 
+                        align="center" 
+                        width="2.5"
+                        color="#ffffff">
+                </a-text>
+                
+                <a-text value="linea de defensa" 
+                        position="0 0 0.01" 
+                        align="center" 
+                        width="2.5"
+                        color="#ffffff">
+                </a-text>
+                
+                <a-text value="contra ataques" 
+                        position="0 -0.25 0.01" 
+                        align="center" 
+                        width="2.5"
+                        color="#ffffff">
+                </a-text>
+                
+                <a-text value="ciberneticos" 
+                        position="0 -0.5 0.01" 
+                        align="center" 
+                        width="2.5"
+                        color="#ffffff">
+                </a-text>
+
+                <a-cone position="0 -0.85 0" radius-bottom="0.2" radius-top="0" height="0.25" color="#00d4ff"></a-cone>
+            </a-entity>
+
+            <!-- Efectos flotantes -->
+            <a-text value="01010" position="-1.2 1.8 0" color="#00ff00" scale="0.4 0.4 0.4"
+                    animation="property: position; to: -1.2 2.8 0; loop: true; dur: 3000; easing: linear"></a-text>
+            <a-text value="11001" position="1.2 2 0" color="#00ff00" scale="0.4 0.4 0.4"
+                    animation="property: position; to: 1.2 3 0; loop: true; dur: 3500; easing: linear"></a-text>
+            
+            <!-- Plataforma -->
+            <a-cylinder position="0 0 0" radius="0.7" height="0.08" color="#00d4ff"
+                        animation="property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear">
+            </a-cylinder>
+            
+        </a-marker>
+
+        <!-- BARCODE 1 - SUPERHEROÍNA -->
+        <a-marker type="barcode" value="1" id="barcode-1">
+            
+            <a-entity position="0 0 0">
+                <!-- Cuerpo heroína -->
+                <a-box position="0 0.9 0" scale="0.4 0.55 0.28" color="#ff0033"
+                       animation="property: scale; from: 0.4 0.55 0.28; to: 0.42 0.57 0.3; loop: true; dur: 2000; dir: alternate">
+                </a-box>
+                <a-box position="0 0.35 0" scale="0.4 0.55 0.28" color="#0033ff"></a-box>
+                
+                <!-- Cabeza -->
+                <a-sphere position="0 1.35 0" radius="0.2" color="#ffd0b3"></a-sphere>
+                
+                <!-- Cabello -->
+                <a-cone position="0 1.55 0" radius-bottom="0.22" radius-top="0.06" height="0.35" color="#663300"></a-cone>
+                
+                <!-- Ojos -->
+                <a-sphere position="-0.08 1.38 0.17" radius="0.03" color="#000000"></a-sphere>
+                <a-sphere position="0.08 1.38 0.17" radius="0.03" color="#000000"></a-sphere>
+                
+                <!-- Capa -->
+                <a-plane position="0 0.8 -0.17" width="0.6" height="0.9" color="#ffcc00"
+                         animation="property: rotation; from: 0 -8 0; to: 0 8 0; loop: true; dur: 2000; dir: alternate">
+                </a-plane>
+                
+                <!-- Botas -->
+                <a-cylinder position="-0.14 0.06 0" radius="0.09" height="0.18" color="#ffffff"></a-cylinder>
+                <a-cylinder position="0.14 0.06 0" radius="0.09" height="0.18" color="#ffffff"></a-cylinder>
+                <a-cylinder position="-0.14 -0.06 0" radius="0.1" height="0.1" color="#ff0000"></a-cylinder>
+                <a-cylinder position="0.14 -0.06 0" radius="0.1" height="0.1" color="#ff0000"></a-cylinder>
+            </a-entity>
+
+            <!-- Mensaje -->
+            <a-entity position="1 1.7 0" rotation="0 -25 0"
+                      animation="property: position; from: 1 1.7 0; to: 1 1.9 0; loop: true; dur: 2500; dir: alternate">
+                
+                <a-plane width="1.8" height="1" color="#ff1493" opacity="0.95" material="side: double"></a-plane>
+                
+                <a-text value="💖 ¡Hey! 💖" 
+                        position="0 0.3 0.01" 
+                        align="center" 
+                        width="1.6"
+                        color="#ffffff">
+                </a-text>
+                
+                <a-text value="Protege tu" 
+                        position="0 0.05 0.01" 
+                        align="center" 
+                        width="1.5"
+                        color="#ffffff">
+                </a-text>
+                
+                <a-text value="informacion" 
+                        position="0 -0.2 0.01" 
+                        align="center" 
+                        width="1.5"
+                        color="#ffffff">
+                </a-text>
+            </a-entity>
+
+            <!-- Plataforma -->
+            <a-cylinder position="0 0 0" radius="0.7" height="0.08" color="#ff1493"
+                        animation="property: rotation; to: 0 360 0; loop: true; dur: 12000; easing: linear">
+            </a-cylinder>
+            
+        </a-marker>
+
+        <a-entity camera></a-entity>
+    </a-scene>
+
+    <script>
+        const status = document.getElementById('status');
+        let currentMarker = null;
+
+        // Detectar barcode 0
+        const barcode0 = document.getElementById('barcode-0');
+        if(barcode0) {
+            barcode0.addEventListener('markerFound', () => {
+                console.log('Código 0 detectado!');
+                status.textContent = '✅ Ninja Hacker Activado!';
+                status.classList.add('found');
+                currentMarker = 0;
+            });
+            barcode0.addEventListener('markerLost', () => {
+                if(currentMarker === 0) {
+                    status.textContent = '🔍 Apunta a uno de los códigos →';
+                    status.classList.remove('found');
+                    currentMarker = null;
+                }
+            });
+        }
+
+        // Detectar barcode 1
+        const barcode1 = document.getElementById('barcode-1');
+        if(barcode1) {
+            barcode1.addEventListener('markerFound', () => {
+                console.log('Código 1 detectado!');
+                status.textContent = '✅ Superheroína Activada!';
+                status.classList.add('found');
+                currentMarker = 1;
+            });
+            barcode1.addEventListener('markerLost', () => {
+                if(currentMarker === 1) {
+                    status.textContent = '🔍 Apunta a uno de los códigos →';
+                    status.classList.remove('found');
+                    currentMarker = null;
+                }
+            });
+        }
+
+        function showMarker(id) {
+            const markerWindow = window.open('', 'Marcador', 'width=700,height=700');
+            const svgs = [
+                // Código 0
+                `<svg width="100%" height="100%" viewBox="0 0 200 200">
+                    <rect width="200" height="200" fill="white"/>
+                    <rect x="20" y="20" width="160" height="160" fill="black"/>
+                    <rect x="30" y="30" width="140" height="140" fill="white"/>
+                    <rect x="50" y="50" width="30" height="30" fill="black"/>
+                    <rect x="120" y="50" width="30" height="30" fill="black"/>
+                    <rect x="50" y="120" width="30" height="30" fill="black"/>
+                    <rect x="120" y="120" width="30" height="30" fill="black"/>
+                </svg>`,
+                // Código 1
+                `<svg width="100%" height="100%" viewBox="0 0 200 200">
+                    <rect width="200" height="200" fill="white"/>
+                    <rect x="20" y="20" width="160" height="160" fill="black"/>
+                    <rect x="30" y="30" width="140" height="140" fill="white"/>
+                    <rect x="70" y="50" width="60" height="20" fill="black"/>
+                    <rect x="50" y="85" width="100" height="30" fill="black"/>
+                    <rect x="70" y="130" width="60" height="20" fill="black"/>
+                </svg>`
+            ];
+            
+            const names = ['Ninja Hacker', 'Superheroína'];
+            
+            markerWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Código ${id} - ${names[id]}</title>
+                    <style>
+                        body {
+                            margin: 0; padding: 40px;
+                            display: flex; flex-direction: column;
+                            align-items: center; justify-content: center;
+                            min-height: 100vh; background: #f0f0f0;
+                            font-family: Arial, sans-serif;
+                        }
+                        h1 { color: #4CAF50; margin-bottom: 20px; }
+                        .marker { width: 500px; height: 500px; background: white;
+                                 padding: 30px; border-radius: 15px;
+                                 box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
+                        .info { text-align: center; margin-top: 30px; color: #666; }
+                    </style>
+                </head>
+                <body>
+                    <h1>📱 Código ${id} - ${names[id]}</h1>
+                    <div class="marker">${svgs[id]}</div>
+                    <div class="info">
+                        <p><strong>Apunta tu celular a este código</strong></p>
+                        <p>Mantén 30-40cm de distancia</p>
+                    </div>
+                </body>
+                </html>
+            `);
+            markerWindow.document.close();
+        }
+
+        function showAllMarkers() {
+            const allWindow = window.open('', 'TodosMarcadores', 'width=900,height=1000');
+            allWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Todos los Códigos AR</title>
+                    <style>
+                        body {
+                            margin: 0; padding: 40px;
+                            background: #f0f0f0;
+                            font-family: Arial, sans-serif;
+                        }
+                        h1 { color: #4CAF50; text-align: center; }
+                        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+                        .marker-card { background: white; padding: 30px;
+                                      border-radius: 15px;
+                                      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+                                      text-align: center; }
+                        .marker-card h2 { color: #667eea; margin-bottom: 15px; }
+                        svg { width: 100%; height: auto; }
+                        @media (max-width: 768px) {
+                            .grid { grid-template-columns: 1fr; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <h1>📱 Códigos AR de Ciberseguridad</h1>
+                    <div class="grid">
+                        <div class="marker-card">
+                            <h2>Código 0 - Ninja Hacker</h2>
+                            <svg viewBox="0 0 200 200">
+                                <rect width="200" height="200" fill="white"/>
+                                <rect x="20" y="20" width="160" height="160" fill="black"/>
+                                <rect x="30" y="30" width="140" height="140" fill="white"/>
+                                <rect x="50" y="50" width="30" height="30" fill="black"/>
+                                <rect x="120" y="50" width="30" height="30" fill="black"/>
+                                <rect x="50" y="120" width="30" height="30" fill="black"/>
+                                <rect x="120" y="120" width="30" height="30" fill="black"/>
+                            </svg>
+                        </div>
+                        <div class="marker-card">
+                            <h2>Código 1 - Superheroína</h2>
+                            <svg viewBox="0 0 200 200">
+                                <rect width="200" height="200" fill="white"/>
+                                <rect x="20" y="20" width="160" height="160" fill="black"/>
+                                <rect x="30" y="30" width="140" height="140" fill="white"/>
+                                <rect x="70" y="50" width="60" height="20" fill="black"/>
+                                <rect x="50" y="85" width="100" height="30" fill="black"/>
+                                <rect x="70" y="130" width="60" height="20" fill="black"/>
+                            </svg>
+                        </div>
+                    </div>
+                </body>
+                </html>
+            `);
+            allWindow.document.close();
+        }
+    </script>
+</body>
+</html>
